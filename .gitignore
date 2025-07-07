@@ -9207,3 +9207,4 @@ venv/lib/python3.11/site-packages/wheel-0.45.1.dist-info/RECORD
 venv/lib/python3.11/site-packages/wheel-0.45.1.dist-info/REQUESTED
 venv/lib/python3.11/site-packages/wheel-0.45.1.dist-info/WHEEL
 .github/copilot-instructions.md
+.env

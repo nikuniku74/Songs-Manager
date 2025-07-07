@@ -8,3 +8,6 @@
 4. `pip install --upgrade pip setuptools wheel`
 5. `pip install flask py2app`
 6. `python setup.py py2app`
+
+## Goto url
+- `https://songs-manager.onrender.com`
