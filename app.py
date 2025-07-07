@@ -3,29 +3,26 @@ import os
 import socket
 import sys
 import threading
-import time
 import webbrowser
 import requests
+import dropbox
+from dotenv import load_dotenv
+
+load_dotenv()
+
+app = Flask(__name__)
+PAGE_SIZE = 50
+
+# Dropbox config
+DROPBOX_TOKEN = os.getenv("DROPBOX_TOKEN")
+DROPBOX_PATH = os.getenv("DROPBOX_FILE_PATH")
+dbx = dropbox.Dropbox(DROPBOX_TOKEN)
 
 def open_browser(port):
     url = f"http://127.0.0.1:{port}"
     def _open():
         webbrowser.open(url)
-    threading.Timer(1.0, _open).start()  # leggero delay per assicurarsi che il server sia partito
-
-def get_external_file(filename):
-    if getattr(sys, 'frozen', False):
-        app_path = os.path.abspath(os.path.join(sys.argv[0], "../../../.."))
-    else:
-        app_path = os.path.abspath(".")
-
-    full_path = os.path.join(app_path, filename)
-    print(f"[DEBUG] Caricamento file da: {full_path}")
-    return full_path
-
-app = Flask(__name__)
-FILE_PATH = get_external_file("songs.txt")
-PAGE_SIZE = 50
+    threading.Timer(1.0, _open).start()
 
 def find_free_port(default=5050):
     s = socket.socket()
@@ -56,16 +53,22 @@ def format_line(entry):
     return base
 
 def load_songs():
-    if not os.path.exists(FILE_PATH):
+    try:
+        metadata, res = dbx.files_download(DROPBOX_PATH)
+        content = res.content.decode('utf-8')
+        lines = content.strip().split('\n')
+        return [parse_line(line) for line in lines if line.strip()]
+    except Exception as e:
+        print(f"[ERRORE Dropbox] Impossibile leggere {DROPBOX_PATH}: {e}")
         return []
-    with open(FILE_PATH, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-    return [parse_line(line) for line in lines if line.strip()]
 
 def save_songs(songs):
-    lines = [format_line(entry) for entry in songs]
-    with open(FILE_PATH, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines))
+    try:
+        lines = [format_line(entry) for entry in songs]
+        content = "\n".join(lines)  # niente newline finale!
+        dbx.files_upload(content.encode('utf-8'), DROPBOX_PATH, mode=dropbox.files.WriteMode.overwrite)
+    except Exception as e:
+        print(f"[ERRORE Dropbox] Impossibile scrivere {DROPBOX_PATH}: {e}")
 
 def get_colors():
     songs = load_songs()
@@ -128,4 +131,3 @@ if __name__ == "__main__":
     print(f"Applicazione avviata su http://127.0.0.1:{port}")
     open_browser(port)
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", port)))
-
