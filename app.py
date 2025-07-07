@@ -127,5 +127,5 @@ if __name__ == "__main__":
     port = find_free_port()
     print(f"Applicazione avviata su http://127.0.0.1:{port}")
     open_browser(port)
-    app.run(host="127.0.0.1", port=port)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", port)))
 
