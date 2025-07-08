@@ -1,6 +1,6 @@
 # Songs-Manager
 
-## to install
+## To install
 
 1. `rm -rf venv`
 2. `/Library/Frameworks/Python.framework/Versions/3.11/bin/python3 -m venv venv`
